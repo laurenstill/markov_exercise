@@ -1,4 +1,5 @@
 import random
+import tweepy
 
 def process_file(filename):
 	dict = {}
@@ -6,14 +7,15 @@ def process_file(filename):
 	read_file = f.read()
 	f.close()
 	word_list = read_file.split()
-	while len(word_list) >= 3:
-		prefix = (word_list[0], word_list[1])
-		if prefix in dict.keys():
-			dict[prefix].append(word_list[2])
+
+	for i in range(len(word_list)-2):
+		prefix = (word_list[i], word_list[i+1])
+		suffix = word_list[i+2]
+		if dict.get(prefix) is not None:
+			dict[prefix].append(suffix)
 		else:
-			dict[prefix] = [word_list[2]]
-		prefix = shift(prefix, word_list[2])
-		word_list = word_list[1:]
+			dict[prefix] = [suffix]
+
 	return dict
 
 def shift(tuple_pair, second_argument):
@@ -26,7 +28,6 @@ def shift(tuple_pair, second_argument):
 def build_sentence(mapping):
 	punct_found = False
 	sentence_words = []
-	space = ' '
 	punct = ['.', '?', '!']
 	if len(mapping) != 0:
 		key_list = mapping.keys()
@@ -40,22 +41,34 @@ def build_sentence(mapping):
 				working_key = shift(working_key, element)
 			else:
 				punct_found = True
-		sentence = space.join(sentence_words)
-		sentence = sentence.capitalize()
+		sentence_words[0] = sentence_words[0].capitalize()
+		sentence = " ".join(sentence_words)
 		return sentence
 
 def build_paragraph(dict, times):
 	paragraph_list = []
 	space = ' '
-	for num in range(times-1):
+	for num in range(times):
 		sentence = build_sentence(dict)
 		paragraph_list.append(sentence)
 	paragraph = space.join(paragraph_list)
 	return paragraph
 
+def build_tweet(source, n):
+	check = True
+	while check:
+		if len(build_paragraph((process_file(source)), n)) <= 140:
+			print build_paragraph((process_file(source)), n)
+			print n
+			print len(build_paragraph((process_file(source)), n))
+			check = False
+		else:
+			n = n-1
+
+
+
 def main():
-	print build_paragraph((process_file('sample5.txt')), 5)
-	#print process_file('sample5.txt')
+	build_tweet('emma.txt', 5)
 
 
 if __name__ == "__main__":
