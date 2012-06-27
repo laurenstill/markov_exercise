@@ -1,51 +1,19 @@
 import random
 
-"""
-markov.py
-
-Reference text: section 13.8, how to think like a computer scientist
-
-Do markov analysis of a text and produce mimic text based off the original.
-
-Markov analysis consists of taking a text, and producing a mapping of prefixes to suffixes. A prefix consists of one or more words, and the next word to follow the prefix in the text. Note, a prefix can have more than one suffix.
-
-Eg: markov analysis with a prefix length of '1'
-
-    Original text:
-        "The quick brown fox jumped over the lazy dog"
-
-        "the": ["quick", "lazy"]
-        "quick": ["brown"]
-        "brown": ["fox"]
-        "fox": ["jumped"]
-        ... etc.
-
-With this, you can reassemble a random text similar to the original style by choosing a random prefix and one of its suffixes, then using that suffix as a prefix and repeating the process.
-
-You will write a program that performs markov analysis on a text file, then produce random text from the analysis. The length of the markov prefixes will be adjustable, as will the length of the output produced.
-""" 
-
 def process_file(filename):
 	dict = {}
-
-	# create a list of lines from the file
-	collection_of_lines = []
 	f = open(filename)
-	for line in filename:
-		line_string = f.readline()
-		collection_of_lines.append(line_string)
+	read_file = f.read()
 	f.close()
-
-	# look at each line, and split
-	for line in collection_of_lines:
-		word_list = line.split()
-		print word_list
-		if len(word_list) >= 3:
-			prefix = (word_list[0], word_list[1])
+	word_list = read_file.split()
+	while len(word_list) >= 3:
+		prefix = (word_list[0], word_list[1])
+		if prefix in dict.keys():
+			dict[prefix].append(word_list[2])
+		else:
 			dict[prefix] = [word_list[2]]
-			print dict
-			shift(prefix, word_list[2])
-			print dict
+		prefix = shift(prefix, word_list[2])
+		word_list = word_list[1:]
 	return dict
 
 def shift(tuple_pair, second_argument):
@@ -56,22 +24,38 @@ def shift(tuple_pair, second_argument):
 	return new_tuple
 
 def build_sentence(mapping):
-	#use random.choice(seq)
+	punct_found = False
+	sentence_words = []
 	space = ' '
+	punct = ['.', '?', '!']
 	if len(mapping) != 0:
-		for key in mapping:
-			element = random.choice(mapping[key])
-			word1 = key[0]
-			word2 = key[1]
-			string = word1 + space + word2 + space + element
-		return string
+		key_list = mapping.keys()
+		working_key = random.choice(key_list)
+		sentence_words.append(working_key[0])
+		sentence_words.append(working_key[1])
+		while (punct_found == False) and (working_key in key_list):
+			if sentence_words[-1][-1] not in punct:
+				element = random.choice(mapping[working_key])
+				sentence_words.append(element)
+				working_key = shift(working_key, element)
+			else:
+				punct_found = True
+		sentence = space.join(sentence_words)
+		sentence = sentence.capitalize()
+		return sentence
 
+def build_paragraph(dict, times):
+	paragraph_list = []
+	space = ' '
+	for num in range(times-1):
+		sentence = build_sentence(dict)
+		paragraph_list.append(sentence)
+	paragraph = space.join(paragraph_list)
+	return paragraph
 
 def main():
-	mapping = process_file('sample2.txt')
-	sentence = build_sentence(mapping)
-	print sentence
-	return sentence
+	print build_paragraph((process_file('sample5.txt')), 5)
+	#print process_file('sample5.txt')
 
 
 if __name__ == "__main__":
