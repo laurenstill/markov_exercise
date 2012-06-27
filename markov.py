@@ -1,5 +1,6 @@
 import random
 import tweepy
+import sys
 
 def process_file(filename):
 	dict = {}
@@ -57,18 +58,73 @@ def build_paragraph(dict, times):
 def build_tweet(source, n):
 	check = True
 	while check:
-		if len(build_paragraph((process_file(source)), n)) <= 140:
-			print build_paragraph((process_file(source)), n)
-			print n
-			print len(build_paragraph((process_file(source)), n))
-			check = False
+		message = build_paragraph((process_file(source)), n)
+		check = False
+		return message
+
+def tweet_authentication(message_tweet):
+	CONSUMER_KEY = 'XXXXXXXXXXXXXXXXXX'
+	CONSUMER_SECRET = 'XXXXXXXXXXXXXXXXXX'
+	ACCESS_KEY = 'XXXXXXXXXXXXXXXXXX'
+	ACCESS_SECRET = 'XXXXXXXXXXXXXXXXXX'
+
+	auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+	auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
+	api = tweepy.API(auth)
+	api.update_status(message_tweet)
+
+def check_for_140(tweet_message):
+	size_check = False
+	while size_check == False:
+		if len(tweet_message) > 140:
+			tweet_message = build_tweet('zed_text.txt', 1)
 		else:
-			n = n-1
+			size_check = True
+			return tweet_message
 
+def post_tweet(tweet_message):
+	tweet_authentication(tweet_message)
+	print "Posted on Twitter!"
 
+def command_list():
+	print "#" * 70
+	print "        Wonderful ShawZed Twitter Bot, for Best Tweets"
+	print "\t Commands:"
+	print "\t \t >>> 'y' = yes, post"
+	print "\t \t >>> 'n' = no, do not post"
+	print "\t \t >>> 'y,<twitter_user>' = yes, post @<twitter_user>"
+	print "\t \t >>> 'q' = quit the amazing ShawZed Twitter Creator"
+	print "#" * 70
+	print "\n"
+
+def should_we_post():
+	quit = False
+	while quit == False:
+		message = build_tweet('zed_text.txt', 1)
+		should_we_message = check_for_140(message)
+		print "Generated tweet: %s" %should_we_message
+		should_we = raw_input("Should we post it?:  ")
+		if should_we[0] == "y":
+			if len(should_we) > 2:
+				command_string = should_we.split(',')
+				#returns [y, name]
+				tweet_name = command_string[1]
+				#returns tweet username
+				directed_twitter = "@" + tweet_name + " " + should_we_message
+				post_tweet(directed_twitter)
+			else: 
+				post_tweet(should_we_message)
+		elif should_we == 'n':
+			print "Tweet was not posted."
+		elif should_we == 'q':
+			quit = True
+		else:
+			print "What, that isn't a y or a n."
 
 def main():
-	build_tweet('emma.txt', 5)
+	command_list()
+	should_we_post()
+
 
 
 if __name__ == "__main__":
